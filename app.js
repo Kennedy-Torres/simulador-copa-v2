@@ -181,7 +181,7 @@ async function carregarResultadosAdmin() {
                         <input type="number" id="real_b_${jogo.id}" value="${valB}" min="0">
                     </div>
                     <div class="time-nome">${jogo.time_b}</div>
-                    <button class="btn-salvar-jogo" onclick="salvarPlacarReal(${jogo.id})" style="background-color: #c0392b;">Oficial</button>
+                    <button class="btn-salvar-jogo" onclick="salvarPlacarReal(${jogo.id})" style="background-color: #c0392b;">✓</button>
                 </div>
             `;
         });
