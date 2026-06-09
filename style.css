@@ -626,3 +626,42 @@ nav {
 .btn-salvar-grupo:active {
     transform: scale(0.98);
 }
+
+.site-header {
+    background-color: #f4f7f6; /* Uma cor de fundo suave para o header */
+    padding: 20px 0;
+    border-bottom: 1px solid #ddd; /* Uma linha divisória sutil */
+    display: flex;
+    justify-content: center; /* Centraliza o conteúdo horizontalmente */
+    width: 100%;
+}
+
+.header-content {
+    display: flex;
+    align-items: center; /* Alinha o texto e a logo verticalmente ao centro */
+    gap: 15px; /* Espaço entre a logo e o título */
+    max-width: 1200px; /* Alinha com a largura máxima do seu dashboard, se tiver */
+    margin: 0 20px; /* Adiciona margem lateral */
+}
+
+.site-logo {
+    max-height: 50px; /* Define uma altura máxima pequena para não dominar o header */
+    width: auto; /* Mantém a proporção da imagem */
+    display: block; /* Garante que ela se comporte bem como elemento de bloco */
+}
+
+.site-title {
+    font-size: 2rem; /* Tamanho do título */
+    color: #113f67; /* A cor azul escura do seu projeto */
+    margin: 0; /* Remove margens padrão do h1 */
+}
+
+/* Responsividade para o telemóvel */
+@media (max-width: 600px) {
+    .site-logo {
+        max-height: 40px; /* Um pouco menor no telemóvel */
+    }
+    .site-title {
+        font-size: 1.5rem;
+    }
+}
