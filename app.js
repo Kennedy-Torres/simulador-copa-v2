@@ -122,15 +122,13 @@ function mostrarAba(abaId) {
 
 }
 
-// Função para desenhar a aba de Resultados com o layout de cartões
+// Função para desenhar a aba de Resultados Oficiais (Apenas Leitura)
 async function carregarResultadosAdmin() {
     const listaAdmin = document.getElementById('lista-resultados-admin');
-    listaAdmin.innerHTML = '<p>A carregar os jogos para administração...</p>';
+    listaAdmin.innerHTML = '<p>A carregar os jogos oficiais...</p>';
     
-    // Aplica o grid de grupos para manter o design consistente
     listaAdmin.className = 'grupos-container';
 
-    // Busca todos os jogos da base de dados
     const { data: jogos, error } = await supabaseClient
         .from('matches')
         .select('*')
@@ -139,7 +137,6 @@ async function carregarResultadosAdmin() {
 
     if (error) return listaAdmin.innerHTML = `<p>Erro: ${error.message}</p>`;
 
-    // Agrupa os jogos pela letra do Grupo (A, B, C...)
     const grupos = {};
     jogos.forEach(jogo => {
         if (!grupos[jogo.grupo]) grupos[jogo.grupo] = [];
@@ -148,12 +145,13 @@ async function carregarResultadosAdmin() {
 
     listaAdmin.innerHTML = '';
 
-    // Monta os cartões para cada grupo
+    // Atualiza dinamicamente o título da aba para refletir a nova funcionalidade
+    document.querySelector('#resultados-admin h3').innerText = 'Placares Oficiais da Copa';
+
     Object.keys(grupos).forEach(grupoNome => {
         const card = document.createElement('div');
         card.className = 'grupo-card';
 
-        // Topo do cartão (Simplificado, sem a tabela de classificação)
         let htmlCard = `
             <div class="grupo-topo">
                 <h4>Grupo ${grupoNome} - Placar Oficial</h4>
@@ -166,22 +164,20 @@ async function carregarResultadosAdmin() {
             const diaMes = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
             const hora = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-            // Recupera o placar real caso já tenha sido registado antes
-            const valA = jogo.placar_real_a !== null ? jogo.placar_real_a : '';
-            const valB = jogo.placar_real_b !== null ? jogo.placar_real_b : '';
+            // Se o jogo ainda não aconteceu, exibe um traço ("-")
+            const valA = jogo.placar_real_a !== null ? jogo.placar_real_a : '-';
+            const valB = jogo.placar_real_b !== null ? jogo.placar_real_b : '-';
 
-            // Note que o botão aqui tem uma cor diferente (vermelho escuro) para não confundir com o palpite
             htmlCard += `
                 <div class="jogo-row">
                     <div class="jogo-data">${diaMes}<span>${hora}</span></div>
-                    <div class="time-nome">${jogo.time_a}</div>
-                    <div class="placar-inputs">
-                        <input type="number" id="real_a_${jogo.id}" value="${valA}" min="0">
-                        <span>X</span>
-                        <input type="number" id="real_b_${jogo.id}" value="${valB}" min="0">
+                    <div class="time-nome" style="text-align: right;">${jogo.time_a}</div>
+                    
+                    <div class="placar-display" style="font-weight: bold; margin: 0 15px; width: 70px; font-size: 1.1rem;">
+                        ${valA} x ${valB}
                     </div>
-                    <div class="time-nome">${jogo.time_b}</div>
-                    <button class="btn-salvar-jogo" onclick="salvarPlacarReal(${jogo.id})" style="background-color: #c0392b;">✓</button>
+                    
+                    <div class="time-nome" style="text-align: left;">${jogo.time_b}</div>
                 </div>
             `;
         });
@@ -191,31 +187,6 @@ async function carregarResultadosAdmin() {
     });
 }
 
-// Função para atualizar o placar real na base de dados
-async function salvarPlacarReal(matchId) {
-    const realA = document.getElementById(`real_a_${matchId}`).value;
-    const realB = document.getElementById(`real_b_${matchId}`).value;
-
-    if (realA === '' || realB === '') {
-        alert("Preencha o placar oficial completo!");
-        return;
-    }
-
-    // Faz o UPDATE diretamente na tabela 'matches'
-    const { error } = await supabaseClient
-        .from('matches')
-        .update({ 
-            placar_real_a: parseInt(realA), 
-            placar_real_b: parseInt(realB) 
-        })
-        .eq('id', matchId);
-
-    if (error) {
-        alert("Erro ao salvar: " + error.message);
-    } else {
-        alert("Resultado oficial registado! A tabela de classificação e o Ranking já foram atualizados.");
-    }
-}
 
 
 // Função auxiliar para calcular a classificação do grupo com base nos resultados reais
