@@ -651,6 +651,48 @@ async function carregarCalendario() {
     });
 }
 
+// Monitora se o usuário veio através do link de redefinição de senha
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+        // Força a exibição da tela de autenticação
+        document.getElementById('auth-screen').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'none';
+        
+        // Esconde login/cadastro e mostra apenas o formulário da nova senha
+        document.getElementById('form-login').style.display = 'none';
+        document.getElementById('form-cadastro').style.display = 'none';
+        document.getElementById('form-reset-password').style.display = 'block';
+        
+        document.getElementById('auth-subtitle').innerText = 'Crie uma nova senha para a sua conta';
+    }
+});
+
+async function atualizarSenha() {
+    const novaSenha = document.getElementById('password-reset').value;
+
+    if (!novaSenha || novaSenha.length < 6) {
+        return alert("Por favor, digite uma senha com no mínimo 6 caracteres!");
+    }
+
+    // O Supabase atualiza os dados do usuário que está com a sessão ativa do link
+    const { error } = await supabaseClient.auth.updateUser({
+        password: novaSenha
+    });
+
+    if (error) {
+        alert("Erro ao atualizar a senha: " + error.message);
+    } else {
+        alert("Senha alterada com sucesso! Você já pode entrar no bolão.");
+        
+        // Retorna a tela para o estado de login normal
+        document.getElementById('form-reset-password').style.display = 'none';
+        document.getElementById('form-login').style.display = 'block';
+        document.getElementById('auth-subtitle').innerText = 'Faça login para palpitar!';
+        
+        // Opcional: faz o logout da sessão temporária para ele logar limpo
+        await supabaseClient.auth.signOut();
+    }
+}
 
 // Executa a função automaticamente assim que a página terminar de carregar
 window.onload = verificarSessao;
