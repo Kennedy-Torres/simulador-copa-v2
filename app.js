@@ -294,11 +294,16 @@ async function carregarJogos() {
         const idsDoGrupo = []; // NOVO: Guarda os IDs dos jogos deste cartão
 
         jogosDoGrupo.forEach(jogo => {
-            idsDoGrupo.push(jogo.id); // Adiciona o ID à lista
-
+            idsDoGrupo.push(jogo.id); 
+            
             const dataObj = new Date(jogo.data_jogo);
             const diaMes = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
             const hora = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+            // --- INÍCIO DA LÓGICA DO BADGE ---
+            const isAoVivo = (jogo.status === 'IN_PLAY' || jogo.status === 'PAUSED');
+            const badgeAoVivo = isAoVivo ? `<div class="ao-vivo-badge">AO VIVO</div>` : '';
+            // --- FIM DA LÓGICA DO BADGE ---
 
             // Recupera o palpite que o utilizador já fez (se existir)
             let palpiteA = '';
@@ -310,7 +315,7 @@ async function carregarJogos() {
 
             htmlJogos += `
                 <div class="jogo-row">
-                    <div class="jogo-data">${diaMes}<span>${hora}</span></div>
+                    <div class="jogo-data">${diaMes}<span>${hora}</span>${badgeAoVivo}</div>
                     <div class="time-nome">${jogo.time_a}</div>
                     <div class="placar-inputs">
                         <input type="number" id="palpite_a_${jogo.id}" value="${palpiteA}" min="0">
@@ -632,15 +637,20 @@ async function carregarCalendario() {
         // Linhas com os jogos daquele dia
         diasAgrupados[dia].forEach(jogo => {
             const hora = new Date(jogo.data_jogo).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            
+            // --- INÍCIO DA LÓGICA DO BADGE ---
+            const isAoVivo = (jogo.status === 'IN_PLAY' || jogo.status === 'PAUSED');
+            const badgeAoVivo = isAoVivo ? `<div class="ao-vivo-badge" style="margin-top: 2px;">AO VIVO</div>` : '';
+            // --- FIM DA LÓGICA DO BADGE ---
 
             // Informação Extra: Se o jogo já tiver resultado, mostra o resultado a verde. Senão, mostra "X"
-            const placarExibicao = (jogo.placar_real_a !== null && jogo.placar_real_b !== null)
-                ? `<span class="placar-real-cal">${jogo.placar_real_a} x ${jogo.placar_real_b}</span>`
+            const placarExibicao = (jogo.placar_real_a !== null && jogo.placar_real_b !== null) 
+                ? `<span class="placar-real-cal">${jogo.placar_real_a} x ${jogo.placar_real_b}</span>` 
                 : `<span class="vs-text">X</span>`;
 
             htmlJogos += `
                 <div class="jogo-row cal-row">
-                    <div class="cal-hora">${hora}</div>
+                    <div class="cal-hora">${hora}${badgeAoVivo}</div>
                     <div class="cal-grupo">Grupo ${jogo.grupo}</div>
                     <div class="time-nome cal-time-a">${jogo.time_a}</div>
                     <div class="cal-placar">${placarExibicao}</div>
