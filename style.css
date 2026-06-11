@@ -626,3 +626,26 @@ nav {
 .btn-salvar-grupo:active {
     transform: scale(0.98);
 }
+
+/* ---------------------------------------------------
+   SINALIZADOR AO VIVO
+--------------------------------------------------- */
+.ao-vivo-badge {
+    background-color: #e74c3c;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: bold;
+    padding: 3px 5px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 5px;
+    animation: piscar 1.5s infinite;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@keyframes piscar {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}

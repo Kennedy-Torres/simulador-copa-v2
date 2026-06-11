@@ -5,16 +5,16 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // 2. Função principal para calcular a pontuação seguindo as regras de negócio
 function calcularPontos(palpiteA, palpiteB, placarRealA, placarRealB) {
-    if (placarRealA === null || placarRealB === null) return 0; 
+    if (placarRealA === null || placarRealB === null) return 0;
 
     const diferencaPalpite = palpiteA - palpiteB;
     const diferencaReal = placarRealA - placarRealB;
 
     if (palpiteA === placarRealA && palpiteB === placarRealB) return 5;
 
-    const acertouVencedor = (diferencaPalpite > 0 && diferencaReal > 0) || 
-                            (diferencaPalpite < 0 && diferencaReal < 0) || 
-                            (diferencaPalpite === 0 && diferencaReal === 0);
+    const acertouVencedor = (diferencaPalpite > 0 && diferencaReal > 0) ||
+        (diferencaPalpite < 0 && diferencaReal < 0) ||
+        (diferencaPalpite === 0 && diferencaReal === 0);
 
     if (acertouVencedor) {
         if (diferencaPalpite === diferencaReal) return 3;
@@ -46,13 +46,13 @@ async function cadastrar() {
     const nome = document.getElementById('nome-cadastro').value;
     const email = document.getElementById('email-cadastro').value;
     const password = document.getElementById('password-cadastro').value;
-    
+
     if (!nome || !email || !password) {
         return alert("Por favor, preencha todos os campos!");
     }
-    
+
     const { data, error } = await supabaseClient.auth.signUp({ email, password });
-    
+
     if (error) {
         alert("Erro: " + error.message);
     } else if (data.user) {
@@ -61,7 +61,7 @@ async function cadastrar() {
         ]);
         alert("Cadastro realizado com sucesso! Faça login agora.");
         // Volta automaticamente para a tela de login após cadastrar
-        alternarAuth('login'); 
+        alternarAuth('login');
     }
 }
 
@@ -69,17 +69,17 @@ async function login() {
     // Puxa os dados dos IDs específicos do formulário de login
     const email = document.getElementById('email-login').value;
     const password = document.getElementById('password-login').value;
-    
+
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) {
         alert("Erro no login: " + error.message);
     } else {
         document.getElementById('auth-screen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
-        
+
         // NOVO: Chama a função para escrever o nome no menu após o login
         carregarNomeUsuario(data.user.id);
-        
+
         carregarJogos();
     }
 }
@@ -93,13 +93,13 @@ async function logout() {
 function mostrarAba(abaId) {
     // 1. Esconde todas as abas de conteúdo
     document.querySelectorAll('.aba').forEach(aba => aba.style.display = 'none');
-    
+
     // 2. Mostra apenas a aba que foi clicada
     document.getElementById(abaId).style.display = 'block';
 
     // 3. Remove o destaque (classe 'ativo') de todos os botões do menu
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('ativo'));
-    
+
     // 4. Adiciona o destaque apenas no botão correspondente à aba aberta
     if (abaId === 'palpites') document.getElementById('btn-palpites').classList.add('ativo');
     if (abaId === 'ranking') document.getElementById('btn-ranking').classList.add('ativo');
@@ -126,7 +126,7 @@ function mostrarAba(abaId) {
 async function carregarResultadosAdmin() {
     const listaAdmin = document.getElementById('lista-resultados-admin');
     listaAdmin.innerHTML = '<p>A carregar os jogos oficiais...</p>';
-    
+
     listaAdmin.className = 'grupos-container';
 
     const { data: jogos, error } = await supabaseClient
@@ -164,13 +164,17 @@ async function carregarResultadosAdmin() {
             const diaMes = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
             const hora = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
+            // Verifica se a API informou que a bola está rolando ou no intervalo
+            const isAoVivo = (jogo.status === 'IN_PLAY' || jogo.status === 'PAUSED');
+            const badgeAoVivo = isAoVivo ? `<div class="ao-vivo-badge">AO VIVO</div>` : '';
+
             // Se o jogo ainda não aconteceu, exibe um traço ("-")
             const valA = jogo.placar_real_a !== null ? jogo.placar_real_a : '-';
             const valB = jogo.placar_real_b !== null ? jogo.placar_real_b : '-';
 
             htmlCard += `
                 <div class="jogo-row">
-                    <div class="jogo-data">${diaMes}<span>${hora}</span></div>
+                    <div class="jogo-data">${diaMes}<span>${hora}</span>${badgeAoVivo}</div>
                     <div class="time-nome" style="text-align: right;">${jogo.time_a}</div>
                     
                     <div class="placar-display" style="font-weight: bold; margin: 0 15px; width: 70px; font-size: 1.1rem;">
@@ -209,17 +213,17 @@ function calcularClassificacao(jogosDoGrupo) {
             ta.gp += ga; ta.gc += gb; ta.sg = ta.gp - ta.gc;
             tb.gp += gb; tb.gc += ga; tb.sg = tb.gp - tb.gc;
 
-            if (ga > gb) { ta.p += 3; ta.v++; tb.d++; } 
-            else if (ga < gb) { tb.p += 3; tb.v++; ta.d++; } 
+            if (ga > gb) { ta.p += 3; ta.v++; tb.d++; }
+            else if (ga < gb) { tb.p += 3; tb.v++; ta.d++; }
             else { ta.p += 1; ta.e++; tb.p += 1; tb.e++; }
         }
     });
 
     // 3. Converte para array e ordena (Pontos > Saldo Gols > Gols Pró)
     return Object.values(equipas).sort((a, b) => {
-        if (b.p !== a.p) return b.p - a.p; 
-        if (b.sg !== a.sg) return b.sg - a.sg; 
-        return b.gp - a.gp; 
+        if (b.p !== a.p) return b.p - a.p;
+        if (b.sg !== a.sg) return b.sg - a.sg;
+        return b.gp - a.gp;
     });
 }
 
@@ -227,13 +231,13 @@ function calcularClassificacao(jogosDoGrupo) {
 async function carregarJogos() {
     const listaJogos = document.getElementById('lista-jogos');
     listaJogos.innerHTML = '<p>A carregar os jogos...</p>';
-    
+
     // Adiciona a classe de grelha ao container
     listaJogos.className = 'grupos-container';
 
     // Vai buscar todos os jogos e palpites do utilizador
     const { data: { user } } = await supabaseClient.auth.getUser();
-    
+
     // Traz os jogos e junta (JOIN) com os palpites do próprio utilizador logado
     const { data: jogos, error } = await supabaseClient
         .from('matches')
@@ -291,7 +295,7 @@ async function carregarJogos() {
 
         jogosDoGrupo.forEach(jogo => {
             idsDoGrupo.push(jogo.id); // Adiciona o ID à lista
-            
+
             const dataObj = new Date(jogo.data_jogo);
             const diaMes = dataObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
             const hora = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -372,7 +376,7 @@ async function salvarGrupo(idsArray) {
         const { error } = await supabaseClient.from('predictions').insert(palpitesParaSalvar);
 
         if (error) throw error;
-        
+
         alert("Palpites do grupo salvos com sucesso!");
     } catch (erro) {
         alert("Erro ao salvar o grupo: " + erro.message);
@@ -393,12 +397,12 @@ async function salvarPalpite(matchId) {
 
     const { error } = await supabaseClient
         .from('predictions')
-        .upsert({ 
-            user_id: user.id, 
-            match_id: matchId, 
-            score_a: parseInt(scoreA), 
-            score_b: parseInt(scoreB) 
-        }, { onConflict: 'user_id, match_id' }); 
+        .upsert({
+            user_id: user.id,
+            match_id: matchId,
+            score_a: parseInt(scoreA),
+            score_b: parseInt(scoreB)
+        }, { onConflict: 'user_id, match_id' });
 
     if (error) {
         alert("Erro ao salvar: " + error.message);
@@ -422,7 +426,7 @@ async function carregarRanking() {
 
     // NOVA PARTE: Busca os nomes de todos os usuários
     const { data: perfis } = await supabaseClient.from('profiles').select('*');
-    
+
     // Cria um "dicionário" fácil para achar o nome pelo ID
     const mapaNomes = {};
     if (perfis) {
@@ -459,11 +463,11 @@ async function carregarRanking() {
         li.style.display = 'flex';
         li.style.justifyContent = 'space-between';
         li.style.alignItems = 'center';
-        li.style.backgroundColor = index === 0 ? '#f9fbe7' : '#fff'; 
-        
+        li.style.backgroundColor = index === 0 ? '#f9fbe7' : '#fff';
+
         // Substituímos o ID pelo Nome (ou deixamos "Sem Nome" se for uma conta antiga)
         const nomeDoJogador = mapaNomes[posicao.userId] || 'Sem Nome';
-        
+
         li.innerHTML = `
             <span style="font-size: 1.1rem;">
                 <strong style="color: #113f67; font-size: 1.2rem; margin-right: 10px;">${index + 1}º</strong> 
@@ -484,7 +488,7 @@ async function carregarNomeUsuario(userId) {
         .select('nome')
         .eq('id', userId)
         .single();
-    
+
     if (data && data.nome) {
         document.getElementById('nome-usuario-logado').innerText = data.nome;
     } else {
@@ -499,7 +503,7 @@ async function carregarNomeUsuario(userId) {
 async function verificarSessao() {
     // Pergunta ao Supabase se existe uma sessão ativa guardada no navegador
     const { data: { session } } = await supabaseClient.auth.getSession();
-    
+
     if (session) {
         // Se já estiver logado, esconde o login e vai direto para o painel
         document.getElementById('auth-screen').style.display = 'none';
@@ -524,7 +528,7 @@ async function verificarSessao() {
 async function carregarListaAmigos() {
     const seletor = document.getElementById('seletor-amigos');
     const { data: perfis } = await supabaseClient.from('profiles').select('*');
-    
+
     seletor.innerHTML = '<option value="">Pesquisar amigo pelo nome...</option>';
     perfis.forEach(perfil => {
         const option = document.createElement('option');
@@ -538,12 +542,12 @@ async function carregarListaAmigos() {
 async function carregarPalpitesAmigo() {
     const amigoId = document.getElementById('seletor-amigos').value;
     const lista = document.getElementById('lista-palpites-amigo');
-    
+
     if (!amigoId) {
         lista.innerHTML = '';
         return;
     }
-    
+
     lista.innerHTML = '<p>A carregar palpites...</p>';
 
     // Busca os palpites do amigo
@@ -567,9 +571,9 @@ async function carregarPalpitesAmigo() {
     Object.keys(grupos).forEach(grupoNome => {
         const card = document.createElement('div');
         card.className = 'grupo-card';
-        
+
         let htmlJogos = `<div class="grupo-header">Grupo ${grupoNome}</div>`;
-        
+
         grupos[grupoNome].forEach(p => {
             htmlJogos += `
                 <div class="jogo-row">
@@ -581,7 +585,7 @@ async function carregarPalpitesAmigo() {
                 </div>
             `;
         });
-        
+
         card.innerHTML = htmlJogos + `</div>`;
         lista.appendChild(card);
     });
@@ -607,10 +611,10 @@ async function carregarCalendario() {
     const diasAgrupados = {};
     jogos.forEach(jogo => {
         const dataObj = new Date(jogo.data_jogo);
-        
+
         // Formata a data para ficar bonita: ex. "quinta-feira, 11 de jun"
         const diaNome = dataObj.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' }).replace('.', '');
-        
+
         if (!diasAgrupados[diaNome]) diasAgrupados[diaNome] = [];
         diasAgrupados[diaNome].push(jogo);
     });
@@ -621,17 +625,17 @@ async function carregarCalendario() {
     Object.keys(diasAgrupados).forEach(dia => {
         const diaSection = document.createElement('div');
         diaSection.className = 'calendario-dia';
-        
+
         // Cabeçalho azul com o título do dia
         let htmlJogos = `<div class="calendario-header">${dia}</div><div>`;
-        
+
         // Linhas com os jogos daquele dia
         diasAgrupados[dia].forEach(jogo => {
             const hora = new Date(jogo.data_jogo).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            
+
             // Informação Extra: Se o jogo já tiver resultado, mostra o resultado a verde. Senão, mostra "X"
-            const placarExibicao = (jogo.placar_real_a !== null && jogo.placar_real_b !== null) 
-                ? `<span class="placar-real-cal">${jogo.placar_real_a} x ${jogo.placar_real_b}</span>` 
+            const placarExibicao = (jogo.placar_real_a !== null && jogo.placar_real_b !== null)
+                ? `<span class="placar-real-cal">${jogo.placar_real_a} x ${jogo.placar_real_b}</span>`
                 : `<span class="vs-text">X</span>`;
 
             htmlJogos += `
@@ -644,7 +648,7 @@ async function carregarCalendario() {
                 </div>
             `;
         });
-        
+
         htmlJogos += `</div>`;
         diaSection.innerHTML = htmlJogos;
         lista.appendChild(diaSection);
@@ -657,12 +661,12 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         // Força a exibição da tela de autenticação
         document.getElementById('auth-screen').style.display = 'block';
         document.getElementById('dashboard').style.display = 'none';
-        
+
         // Esconde login/cadastro e mostra apenas o formulário da nova senha
         document.getElementById('form-login').style.display = 'none';
         document.getElementById('form-cadastro').style.display = 'none';
         document.getElementById('form-reset-password').style.display = 'block';
-        
+
         document.getElementById('auth-subtitle').innerText = 'Crie uma nova senha para a sua conta';
     }
 });
@@ -683,12 +687,12 @@ async function atualizarSenha() {
         alert("Erro ao atualizar a senha: " + error.message);
     } else {
         alert("Senha alterada com sucesso! Você já pode entrar no bolão.");
-        
+
         // Retorna a tela para o estado de login normal
         document.getElementById('form-reset-password').style.display = 'none';
         document.getElementById('form-login').style.display = 'block';
         document.getElementById('auth-subtitle').innerText = 'Faça login para palpitar!';
-        
+
         // Opcional: faz o logout da sessão temporária para ele logar limpo
         await supabaseClient.auth.signOut();
     }
