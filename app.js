@@ -130,7 +130,7 @@ async function carregarResultadosAdmin() {
     listaAdmin.className = 'grupos-container';
 
     const { data: jogos, error } = await supabaseClient
-        .from('matches')
+        .from('matches_v2')
         .select('*')
         .order('grupo', { ascending: true })
         .order('data_jogo', { ascending: true });
@@ -165,7 +165,7 @@ async function carregarResultadosAdmin() {
             const hora = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
             // Verifica se a API informou que a bola está rolando ou no intervalo
-            const isAoVivo = (jogo.status === 'IN_PLAY' || jogo.status === 'PAUSED');
+            const isAoVivo = (jogo.status !== 'notstarted' && jogo.status !== 'finished');
             const badgeAoVivo = isAoVivo ? `<div class="ao-vivo-badge">AO VIVO</div>` : '';
 
             // Se o jogo ainda não aconteceu, exibe um traço ("-")
@@ -240,7 +240,7 @@ async function carregarJogos() {
 
     // Traz os jogos e junta (JOIN) com os palpites do próprio utilizador logado
     const { data: jogos, error } = await supabaseClient
-        .from('matches')
+        .from('matches_v2')
         .select(`*, predictions ( score_a, score_b )`)
         .eq('predictions.user_id', user.id)
         .order('grupo', { ascending: true })
@@ -301,7 +301,7 @@ async function carregarJogos() {
             const hora = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
             // --- INÍCIO DA LÓGICA DO BADGE ---
-            const isAoVivo = (jogo.status === 'IN_PLAY' || jogo.status === 'PAUSED');
+            const isAoVivo = (jogo.status !== 'notstarted' && jogo.status !== 'finished');
             const badgeAoVivo = isAoVivo ? `<div class="ao-vivo-badge">AO VIVO</div>` : '';
             // --- FIM DA LÓGICA DO BADGE ---
 
@@ -427,7 +427,7 @@ async function carregarRanking() {
     // Busca os palpites e resultados
     const { data: palpites, error } = await supabaseClient
         .from('predictions')
-        .select(`user_id, score_a, score_b, matches ( placar_real_a, placar_real_b )`);
+        .select(`user_id, score_a, score_b, matches_v2 ( placar_real_a, placar_real_b )`);
 
     // NOVA PARTE: Busca os nomes de todos os usuários
     const { data: perfis } = await supabaseClient.from('profiles').select('*');
@@ -445,7 +445,7 @@ async function carregarRanking() {
     const pontuacoes = {};
     palpites.forEach(palpite => {
         const userId = palpite.user_id;
-        const jogo = palpite.matches;
+        const jogo = palpite.matches_v2;
         if (!pontuacoes[userId]) pontuacoes[userId] = 0;
 
         if (jogo.placar_real_a !== null && jogo.placar_real_b !== null) {
@@ -558,14 +558,14 @@ async function carregarPalpitesAmigo() {
     // Busca os palpites do amigo
     const { data: palpites } = await supabaseClient
         .from('predictions')
-        .select(`score_a, score_b, matches ( grupo, time_a, time_b )`)
+        .select(`score_a, score_b, matches_v2 ( grupo, time_a, time_b )`)
         .eq('user_id', amigoId)
-        .order('matches(grupo)', { ascending: true });
+        .order('matches_v2(grupo)', { ascending: true });
 
     // Agrupa os palpites por Grupo (A, B, C...)
     const grupos = {};
     palpites.forEach(p => {
-        const g = p.matches.grupo;
+        const g = p.matches_v2.grupo;
         if (!grupos[g]) grupos[g] = [];
         grupos[g].push(p);
     });
@@ -582,11 +582,11 @@ async function carregarPalpitesAmigo() {
         grupos[grupoNome].forEach(p => {
             htmlJogos += `
                 <div class="jogo-row">
-                    <div class="time-nome">${p.matches.time_a}</div>
+                    <div class="time-nome">${p.matches_v2.time_a}</div>
                     <div class="placar-display" style="font-weight: bold; margin: 0 15px;">
                         ${p.score_a} x ${p.score_b}
                     </div>
-                    <div class="time-nome">${p.matches.time_b}</div>
+                    <div class="time-nome">${p.matches_v2.time_b}</div>
                 </div>
             `;
         });
@@ -606,7 +606,7 @@ async function carregarCalendario() {
 
     // Vai buscar os jogos e ordena apenas pela data e hora (independentemente do grupo)
     const { data: jogos, error } = await supabaseClient
-        .from('matches')
+        .from('matches_v2')
         .select('*')
         .order('data_jogo', { ascending: true });
 
@@ -639,7 +639,7 @@ async function carregarCalendario() {
             const hora = new Date(jogo.data_jogo).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
             
             // --- INÍCIO DA LÓGICA DO BADGE ---
-            const isAoVivo = (jogo.status === 'IN_PLAY' || jogo.status === 'PAUSED');
+            const isAoVivo = (jogo.status !== 'notstarted' && jogo.status !== 'finished');
             const badgeAoVivo = isAoVivo ? `<div class="ao-vivo-badge" style="margin-top: 2px;">AO VIVO</div>` : '';
             // --- FIM DA LÓGICA DO BADGE ---
 
