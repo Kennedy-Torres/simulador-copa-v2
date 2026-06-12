@@ -649,3 +649,15 @@ nav {
     50% { opacity: 0.3; }
     100% { opacity: 1; }
 }
+
+/* ---------------------------------------------------
+   BANDEIRAS
+--------------------------------------------------- */
+.bandeira-time {
+    width: 20px;
+    height: auto;
+    border-radius: 2px;
+    margin: 0 6px;
+    vertical-align: middle;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}

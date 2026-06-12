@@ -652,9 +652,9 @@ async function carregarCalendario() {
                 <div class="jogo-row cal-row">
                     <div class="cal-hora">${hora}${badgeAoVivo}</div>
                     <div class="cal-grupo">Grupo ${jogo.grupo}</div>
-                    <div class="time-nome cal-time-a">${jogo.time_a}</div>
+                    <div class="time-nome cal-time-a">${jogo.time_a} <img src="${obterBandeira(jogo.time_a)}" class="bandeira-time" onerror="this.style.display='none'"></div>
                     <div class="cal-placar">${placarExibicao}</div>
-                    <div class="time-nome cal-time-b">${jogo.time_b}</div>
+                    <div class="time-nome cal-time-b"><img src="${obterBandeira(jogo.time_b)}" class="bandeira-time" onerror="this.style.display='none'"> ${jogo.time_b}</div>
                 </div>
             `;
         });
@@ -706,6 +706,42 @@ async function atualizarSenha() {
         // Opcional: faz o logout da sessão temporária para ele logar limpo
         await supabaseClient.auth.signOut();
     }
+}
+
+// ---------------------------------------------------------
+// MAPEAMENTO DE BANDEIRAS DA NOVA API
+// ---------------------------------------------------------
+function obterBandeira(nomeTime) {
+    const mapaBandeiras = {
+        // Nomes completos originais
+        'mexico': 'mx', 'africa do sul': 'za', 'coreia do sul': 'kr', 'republica tcheca': 'cz',
+        'canada': 'ca', 'bosnia': 'ba', 'bosnia e herzegovina': 'ba', 'catar': 'qa', 'qatar': 'qa',
+        'suica': 'ch', 'brasil': 'br', 'marrocos': 'ma', 'haiti': 'ht', 'escocia': 'gb-sct',
+        'estados unidos': 'us', 'eua': 'us', 'paraguai': 'py', 'australia': 'au', 'turquia': 'tr',
+        'alemanha': 'de', 'curacao': 'cw', 'costa do marfim': 'ci', 'equador': 'ec', 'holanda': 'nl',
+        'japao': 'jp', 'suecia': 'se', 'tunisia': 'tn', 'belgica': 'be', 'egito': 'eg',
+        'ira': 'ir', 'nova zelandia': 'nz', 'espanha': 'es', 'cabo verde': 'cv', 
+        'arabia saudita': 'sa', 'uruguai': 'uy', 'franca': 'fr', 'senegal': 'sn', 
+        'iraque': 'iq', 'noruega': 'no', 'argentina': 'ar', 'argelia': 'dz', 
+        'austria': 'at', 'jordania': 'jo', 'portugal': 'pt', 'congo': 'cd', 
+        'republica democratica do congo': 'cd', 'uzbequistao': 'uz', 'colombia': 'co', 
+        'inglaterra': 'gb-eng', 'croacia': 'hr', 'gana': 'gh', 'panama': 'pa',
+
+        // --- NOVAS ABREVIAÇÕES DO BANCO DE DADOS ---
+        'n. zelandia': 'nz',
+        'rd congo': 'cd',
+        'a. saudita': 'sa',
+        'c. do marfim': 'ci',
+        'r. tcheca': 'cz',
+        'coreia do s.': 'kr'
+    };
+
+    // Remove acentos e joga para minúsculo para comparar com segurança
+    const nomeNormalizado = nomeTime.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const codigo = mapaBandeiras[nomeNormalizado];
+    
+    // Retorna a imagem da flagcdn (w20 = 20 pixels de largura)
+    return codigo ? `https://flagcdn.com/w20/${codigo}.png` : '';
 }
 
 // Executa a função automaticamente assim que a página terminar de carregar
