@@ -17,7 +17,6 @@ function calcularPontos(palpiteA, palpiteB, placarRealA, placarRealB) {
         (diferencaPalpite === 0 && diferencaReal === 0);
 
     if (acertouVencedor) {
-        if (diferencaPalpite === diferencaReal) return 3;
         return 2;
     }
     return 0;
