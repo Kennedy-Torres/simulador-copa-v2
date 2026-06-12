@@ -555,14 +555,13 @@ async function carregarPalpitesAmigo() {
 
     lista.innerHTML = '<p>A carregar palpites...</p>';
 
-    // Busca os palpites do amigo
+    // 1. ATUALIZAÇÃO: Puxar o placar_real_a e placar_real_b da base de dados
     const { data: palpites } = await supabaseClient
         .from('predictions')
-        .select(`score_a, score_b, matches_v2 ( grupo, time_a, time_b )`)
+        .select(`score_a, score_b, matches_v2 ( grupo, time_a, time_b, placar_real_a, placar_real_b )`)
         .eq('user_id', amigoId)
         .order('matches_v2(grupo)', { ascending: true });
 
-    // Agrupa os palpites por Grupo (A, B, C...)
     const grupos = {};
     palpites.forEach(p => {
         const g = p.matches_v2.grupo;
@@ -572,7 +571,6 @@ async function carregarPalpitesAmigo() {
 
     lista.innerHTML = '';
 
-    // Desenha cada grupo como um card, igual aos seus palpites
     Object.keys(grupos).forEach(grupoNome => {
         const card = document.createElement('div');
         card.className = 'grupo-card';
@@ -580,13 +578,42 @@ async function carregarPalpitesAmigo() {
         let htmlJogos = `<div class="grupo-header">Grupo ${grupoNome}</div>`;
 
         grupos[grupoNome].forEach(p => {
+            let estiloFundo = '';
+            let infoPontos = '';
+
+            // 2. LÓGICA DE CORES E PONTOS: Só calcula se o jogo já tiver um placar oficial
+            if (p.matches_v2.placar_real_a !== null && p.matches_v2.placar_real_b !== null) {
+                const pontos = calcularPontos(p.score_a, p.score_b, p.matches_v2.placar_real_a, p.matches_v2.placar_real_b);
+                
+                // Aplicação das cores em tons suaves (pastel) para não prejudicar a leitura
+                if (pontos === 5) {
+                    estiloFundo = 'background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;'; // Verde Suave
+                } else if (pontos === 2 || pontos === 3) {
+                    estiloFundo = 'background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;'; // Amarelo Suave
+                } else {
+                    estiloFundo = 'background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;'; // Vermelho Suave
+                }
+                
+                infoPontos = `<div style="font-size: 0.8rem; font-weight: bold; margin-top: 4px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 2px;">+${pontos} pts</div>`;
+            }
+
+            // 3. ESTRUTURA HTML: Injeção das bandeiras e do fundo colorido
             htmlJogos += `
                 <div class="jogo-row">
-                    <div class="time-nome">${p.matches_v2.time_a}</div>
-                    <div class="placar-display" style="font-weight: bold; margin: 0 15px;">
-                        ${p.score_a} x ${p.score_b}
+                    <div class="time-nome" style="text-align: right;">
+                        ${p.matches_v2.time_a} 
+                        <img src="${obterBandeira(p.matches_v2.time_a)}" class="bandeira-time" onerror="this.style.display='none'">
                     </div>
-                    <div class="time-nome">${p.matches_v2.time_b}</div>
+                    
+                    <div class="placar-display" style="text-align: center; margin: 0 15px; padding: 6px 12px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); ${estiloFundo}">
+                        <div style="font-weight: bold; font-size: 1.1rem; letter-spacing: 2px;">${p.score_a} x ${p.score_b}</div>
+                        ${infoPontos}
+                    </div>
+                    
+                    <div class="time-nome" style="text-align: left;">
+                        <img src="${obterBandeira(p.matches_v2.time_b)}" class="bandeira-time" onerror="this.style.display='none'"> 
+                        ${p.matches_v2.time_b}
+                    </div>
                 </div>
             `;
         });
