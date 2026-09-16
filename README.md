@@ -6,28 +6,33 @@ Um simulador interativo e responsivo para a Copa do Mundo de 2026, criado para q
 
 ---
 
+## 🏗️ Arquitetura & Conceito Full-stack
+
+Embora a interface utilize tecnologia nativa sem frameworks (Vanilla JS), a aplicação adota uma arquitetura *full-stack serverless* completa:
+
+* **Front-end:** Interface reativa em HTML5, CSS3 e JavaScript (ES6+) com consumo assíncrono de APIs e manipulação dinâmica do DOM.
+* **Back-end Serverless:** Automação de rotinas via *Supabase Edge Functions* para sincronização automática dos resultados via API externa sem necessidade de um servidor dedicado.
+* **Banco de Dados & Segurança:** Persistência no PostgreSQL (Supabase) configurado com políticas de *Row Level Security (RLS)* para controle granular de acesso e autenticação segura de usuários.
+
+---
+
 ## 📌 Funcionalidades
 
-* **Autenticação de Usuários:** Login e registro seguros via Supabase.
-* **Dashboard de Palpites:** Interface intuitiva para salvar palpites individuais ou por grupo, agrupados por fase e data.
-* **Calendário de Jogos:** Visualização cronológica de todas as partidas do torneio, exibindo placares reais de jogos já finalizados.
-* **Ranking em Tempo Real:** Tabela de classificação dos participantes baseada nos acertos dos placares.
+* **Autenticação de Usuários:** Login e registro seguros via Supabase Auth.
+* **Dashboard de Palpites:** Gestão de palpites por participante agrupados por fase e data da partida.
+* **Sincronização de Placares:** Consumo automatizado da API [FOOTBALL-DATA.ORG](https://www.football-data.org/) para atualização dos placares oficiais.
+* **Ranking em Tempo Real:** Cálculo automático das pontuações e reordenação da classificação.
 * **Atualização de Placares Reais:** Integração com a API do FOOTBALL-DATA.ORG e funções Serverless (Supabase Functions) para buscar e atualizar os resultados oficiais automaticamente.
-* **Painel Administrativo:** Área restrita para ajustes e inserção manual de resultados, caso necessário.
+* **Painel Administrativo:** Área restrita para ajustes e gestão manual de partidas.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-**Front-end:**
-* HTML5 (Semântico)
-* CSS3 (Flexbox, Grid, Responsividade)
-* JavaScript (Vanilla, ES6+, Async/Await)
-
-**Back-end & Infraestrutura:**
-* **[Supabase](https://supabase.com/):** Banco de Dados PostgreSQL, Autenticação, Row Level Security (RLS) e Edge Functions.
-* **API Externa:** [FOOTBALL-DATA.ORG](https://www.football-data.org/) para dados em tempo real.
-* **Hospedagem:** Netlify (Deploy Contínuo).
+* **Front-end:** HTML5, CSS3 (Flexbox/Grid), JavaScript Vanilla (ES6+, Async/Await)
+* **Back-end & Banco de Dados:** Supabase (PostgreSQL, Auth, Row Level Security, Edge Functions)
+* **API Esportiva:** [FOOTBALL-DATA.ORG](https://www.football-data.org/) para dados em tempo real.
+* **Hospedagem & CI/CD:** Netlify.
 
 ---
 
@@ -35,11 +40,11 @@ Um simulador interativo e responsivo para a Copa do Mundo de 2026, criado para q
 
 Abaixo está a organização dos principais arquivos do repositório:
 
-* `index.html`: Estrutura principal da aplicação e abas do dashboard.
-* `style.css`: Estilização completa, com visual mobile-first.
-* `app.js`: Lógica de negócio do front-end, comunicação com o Supabase e manipulação do DOM.
+* `index.html`: Estrutura principal da aplicação e navegação entre abas.
+* `style.css`: Estilização responsiva com foco em *mobile-first*.
+* `app.js`: Regras de negócio do front-end, orquestração de chamadas à API e manipulação da UI.
 * `tacaCopa.jpg` / `favicon-copa-do-mundo.png`: Assets visuais (Logos e ícones).
-* `supabase/` : Contém os scripts server-side (Edge Functions) responsáveis por consumir a API de esportes e atualizar a tabela `matches` no banco de dados.
+* `supabase/` : Contém os scripts server-side (*Edge Functions*) responsáveis por consumir a API de esportes e atualizar o banco de dados.
 
 ---
 
